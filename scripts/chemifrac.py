@@ -1,5 +1,5 @@
 from __future__ import division
-from frac import frac, sample_dm
+from frac import frac, sample_dm, connected_dm
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
@@ -29,17 +29,17 @@ for i in range(len(sdm)):
     dm.loc[x, x] = 0
     dm.loc[y, y] = 0
 
-dm = dm.fillna(1)
-cosine = dm
+dm = dm.fillna(np.inf)
+# cosine = dm
 otu_table = table.T
-cosine = cosine.reindex_axis(sorted(otu_table.columns), axis=0)
-cosine = cosine.reindex_axis(sorted(otu_table.columns), axis=1)
+# cosine = cosine.reindex_axis(sorted(otu_table.columns), axis=0)
+# cosine = cosine.reindex_axis(sorted(otu_table.columns), axis=1)
 
-# shortest = dijkstra(dm.values)
-# shortest = pd.DataFrame(shortest,
-#                         columns=ids, index=ids)
-# shortest = shortest.reindex_axis(sorted(otu_table.columns), axis=0)
-# shortest = shortest.reindex_axis(sorted(otu_table.columns), axis=1)
+shortest = dijkstra(dm.values)
+shortest = pd.DataFrame(shortest,
+                        columns=ids, index=ids)
+shortest = shortest.reindex_axis(sorted(otu_table.columns), axis=0)
+shortest = shortest.reindex_axis(sorted(otu_table.columns), axis=1)
 
 otu_table = otu_table.reindex_axis(sorted(otu_table.columns), axis=1)
 
@@ -53,9 +53,16 @@ otu_table = otu_table.reindex_axis(sorted(otu_table.columns), axis=1)
 samples = otu_table.index
 mat = otu_table.values
 mat = multiplicative_replacement(mat)
-graph_dm = sample_dm(mat, 1-cosine.values)
+# dmG = nx.Graph(shortest.values)
+dm = shortest.values
+dm[dm == np.inf] = 0
+dm[np.isnan(dm)] = 0
+# dmG = nx.Graph(scipy.sparse.dok_matrix(dm))
+# dmG = nx.from_scipy_sparse_matrix(scipy.sparse.dok_matrix(dm))
+
+graph_dm = connected_dm(mat, shortest.values)
 graph_dm += graph_dm.T
 graph_dm = pd.DataFrame(graph_dm,
                         index=samples,
                         columns=samples)
-graph_dm.to_csv('../results/aitchison.txt', '\t')
+graph_dm.to_csv('../results/unconnected_aitchison.txt', '\t')
