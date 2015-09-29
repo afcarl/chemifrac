@@ -1,0 +1,2 @@
+discarding /home/mortonjt/miniconda/bin from PATH
+prepending /home/mortonjt/miniconda/envs/bio/bin to PATH
