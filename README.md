@@ -1,6 +1,6 @@
 # chemifrac
 
-Make the sure that the following packages are installed
+Make the sure that the following packages are installed.  This can be done through pip
 
 - `biom`
 - `scikit-bio`
