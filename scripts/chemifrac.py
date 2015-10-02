@@ -16,9 +16,13 @@ from skbio.stats.ordination import pcoa
 from scipy.sparse.csgraph import dijkstra
 
 # Calculates chemifrac distance
-xls_file = '../data/Coral_ChemiFRAC_test.xlsx'
-table = pd.read_excel(xls_file, sheetname=1, index_col=0)
-sdm = pd.read_excel(xls_file, sheetname=0)
+# xls_file = '../data/Coral_ChemiFRAC_test.xlsx'
+# table = pd.read_excel(xls_file, sheetname=1, index_col=0)
+# sdm = pd.read_excel(xls_file, sheetname=0)
+table_file = '../data/skinmap_chemiFrac_test.csv'
+dm_file = '../data/edges.xlsx'
+table = pd.read_csv(table_file, index_col=0)
+sdm = pd.read_excel(dm_file)
 ids = list(set(sdm['CLUSTERID1']) | set(sdm['CLUSTERID2']))
 dm = pd.DataFrame(index=ids, columns=ids)
 for i in range(len(sdm)):
@@ -52,7 +56,7 @@ otu_table = otu_table.reindex_axis(sorted(otu_table.columns), axis=1)
 
 samples = otu_table.index
 mat = otu_table.values
-mat = multiplicative_replacement(mat)
+# mat = multiplicative_replacement(mat)
 # dmG = nx.Graph(shortest.values)
 dm = shortest.values
 dm[dm == np.inf] = 0
@@ -65,4 +69,4 @@ graph_dm += graph_dm.T
 graph_dm = pd.DataFrame(graph_dm,
                         index=samples,
                         columns=samples)
-graph_dm.to_csv('../results/unconnected_aitchison.txt', '\t')
+graph_dm.to_csv('../results/unconnected_inverted_aitchison.txt', '\t')

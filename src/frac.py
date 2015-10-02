@@ -119,7 +119,7 @@ def connected_dm(mat, dm):
     The distance matrix needs to be in the same order as the vectors
     """
     r, c = mat.shape
-    mat = np.log(mat)
+    mat = np.log(1-mat)
     D = c
     vamp_dm = np.zeros((r, r))
     # dmG = nx.Graph(dm)

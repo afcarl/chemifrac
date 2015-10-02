@@ -1,4 +1,0 @@
-discarding /home/mortonjt/miniconda/bin from PATH
-prepending /home/mortonjt/miniconda/envs/bio/bin to PATH
-chemifrac.py:38: UserWarning: Graph has negative weights: dijkstra will give inaccurate results if the graph contains negative cycles. Consider johnson or bellman_ford.
-  shortest = dijkstra(dm.values)
