@@ -60,7 +60,7 @@ def sample_dm(mat, dm):
     for i in range(r):
         for j in range(i):
             vamp_dm[i, j] = frac(mat[i, :], mat[j, :], dm)
-            # print("i=%d, j=%d, dm[i,j]=%f"%(i, j, vamp_dm[i, j]))
+            print("i=%d, j=%d, dm[i,j]=%f"%(i, j, vamp_dm[i, j]))
         print(i)
     return vamp_dm
 
@@ -96,6 +96,7 @@ def connected_frac(x, y, dm, comp):
             d += kv * dm[u, v]
     return d
 
+
 def connected_dm(mat, dm):
     """
     Calculates connected components separately
@@ -119,7 +120,7 @@ def connected_dm(mat, dm):
     The distance matrix needs to be in the same order as the vectors
     """
     r, c = mat.shape
-    mat = np.log(1-mat)
+    mat = np.log(mat)
     D = c
     vamp_dm = np.zeros((r, r))
     # dmG = nx.Graph(dm)
@@ -129,8 +130,10 @@ def connected_dm(mat, dm):
         for j in range(i):
             d, D = 0, c
             for comp in connected_comps:
-                vamp_dm[i, j] += connected_frac(mat[i ,:], mat[j, :], dm, list(comp))
+                print(comp)
+                vamp_dm[i, j] += connected_frac(mat[i ,:], mat[j, :],
+                                                dm.values, list(comp))
+                print("i=%d, j=%d, dm[i,j]=%f"%(i, j, vamp_dm[i, j]))
             vamp_dm[i, j] = np.sqrt(vamp_dm[i, j]/D)
-            print("i=%d, j=%d, dm[i,j]=%f"%(i, j, vamp_dm[i, j]))
         print(i)
     return vamp_dm
