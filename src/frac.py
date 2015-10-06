@@ -130,10 +130,10 @@ def connected_dm(mat, dm):
         for j in range(i):
             d, D = 0, c
             for comp in connected_comps:
-                print(comp)
+                # print(comp)
                 vamp_dm[i, j] += connected_frac(mat[i ,:], mat[j, :],
                                                 dm.values, list(comp))
-                print("i=%d, j=%d, dm[i,j]=%f"%(i, j, vamp_dm[i, j]))
+                # print("i=%d, j=%d, dm[i,j]=%f"%(i, j, vamp_dm[i, j]))
             vamp_dm[i, j] = np.sqrt(vamp_dm[i, j]/D)
-        print(i)
+        # print(i)
     return vamp_dm

@@ -99,4 +99,4 @@ plt.plot(pcoa_v.samples['PC1'],
 #plt.title('Weighted Aitchison on Coral data')
 #fig.savefig('../results/coral_chemifrac.png')
 
-pcoa_v.write('../results/emperor_unconnected_aitchison_pcoa.txt')
+pcoa_v.write('../results/small_coral_unconnected_aitchison_pcoa.txt')
