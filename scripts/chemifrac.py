@@ -21,7 +21,15 @@ from scipy.spatial.distance import pdist
 
 # Calculates chemifrac distance
 xls_file = '../data/Coral_ChemiFRAC_test.xlsx'
+meta_file = '../data/coral_meta.txt'
 table = pd.read_excel(xls_file, sheetname=1, index_col=0)
+meta_map = pd.read_table(meta_file)
+
+p = meta_map.loc[meta_map['Organism'] == 'Porites', :]
+b = meta_map.loc[meta_map['Organism'] == 'Black Nasty', :]
+i = meta_map.loc[meta_map['Organism'] == 'Interaction', :]
+meta_map = pd.concat([p, b, i])
+
 sdm = pd.read_excel(xls_file, sheetname=0)
 ids = list(set(sdm['CLUSTERID1']) | set(sdm['CLUSTERID2']))
 dm = pd.DataFrame(index=ids, columns=ids)
@@ -33,13 +41,17 @@ for i in range(len(sdm)):
     dm.loc[x, x] = 0
     dm.loc[y, y] = 0
 
-full_dm = copy.deepcopy(dm)
-full_dm.fillna(0)
-dmG = nx.from_scipy_sparse_matrix(scipy.sparse.dok_matrix(dm))
-connected_comps = list(nx.connected_components(dmG))
+# full_dm = copy.deepcopy(dm)
+# full_dm = full_dm.fillna(0)
+# dmG = nx.from_scipy_sparse_matrix(scipy.sparse.dok_matrix(full_dm))
+# connected_comps = list(nx.connected_components(dmG))
+# connected_graphs = list(nx.connected_component_subgraphs(dmG))
+# for i, g in enumerate(connected_graphs):
+#     nx.write_gml(g, '../results/graphs/%d.gml'%i)
+
 
 # dm = dm.fillna(1)
-dm = dm.iloc[:500, :500]
+# dm = dm.iloc[:500, :500]
 otu_table = table.T
 otu_table = otu_table.loc[:, dm.index]
 dm = dm.fillna(np.inf)
@@ -74,7 +86,7 @@ graph_dm = pd.DataFrame(graph_dm,
 graph_dm.to_csv('../results/aitchison.txt', '\t')
 
 # Read in graph_dm
-graph_dm = pd.read_csv('../results/unconnected_inverted_aitchison.txt',
+graph_dm = pd.read_csv('../results/unconnected_aitchison.txt',
                        sep='\t', index_col=0)
 # table = pd.read_table('../data/skinmap_chemiFrac_test.txt',
 #                        sep='\t', index_col=0)
@@ -99,4 +111,4 @@ plt.plot(pcoa_v.samples['PC1'],
 #plt.title('Weighted Aitchison on Coral data')
 #fig.savefig('../results/coral_chemifrac.png')
 
-pcoa_v.write('../results/small_coral_unconnected_aitchison_pcoa.txt')
+pcoa_v.write('../results/coral_unconnected_aitchison_pcoa.txt')

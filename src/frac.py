@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import networkx as nx
 import scipy
-
+from skbio.stats.composition import closure
 
 def frac(x, y, dm):
     """
@@ -32,9 +32,9 @@ def frac(x, y, dm):
     D = len(x)
     d = 0
     for i in range(D-1):
-        kv = ((x[i] - x[i+1:]) - (y[i] - y[i+1:]))**2
-        dv = dm[i, i+1:]
-        d += kv.dot(dv)
+        for j in range(i):
+            d += ((x[i] - x[j]) - (y[i] - y[j]))**2 * dm[i,j]
+            print('xi=%f xj=%f yi=%f yj=%f d=%f' % (x[i],x[j],y[i],y[j],dm[i,j]))
     return np.sqrt(d/D)
 
 
@@ -44,24 +44,32 @@ def sample_dm(mat, dm):
 
     Parameters
     ----------
-    mat : np.array
-        OTU table
-    dm : np.array
-        OTU distance matrix
+    mat : pd.DataFrame
+        Abundance table
+        rows = samples
+        columns = features
+    dm : array_like
+        Distance matrix between features
 
     Returns
     -------
     np.array:
         Sample distance matrix
     """
-    r, c = mat.shape
-    mat = np.log(mat)
-    vamp_dm = np.zeros((r, r))
-    for i in range(r):
+    num_samps, num_feats = mat.shape
+    mat[mat==0] = 1 # add pseudo count for zeros
+    mat = np.log(mat.apply(closure, axis=1))
+    vamp_dm = pd.DataFrame(np.zeros((num_samps, num_samps)),
+                           index=mat.index,
+                           columns=mat.index)
+    for i in range(num_samps):
         for j in range(i):
-            vamp_dm[i, j] = frac(mat[i, :], mat[j, :], dm)
-            print("i=%d, j=%d, dm[i,j]=%f"%(i, j, vamp_dm[i, j]))
-        print(i)
+            u, v = mat.index[i], mat.index[j]
+            d = frac(mat.loc[u, :].values,
+                     mat.loc[v, :].values,
+                     dm)
+            vamp_dm.loc[u, v] = d
+            print('u=%s v=%s d=%f'%(str(u),str(v), d))
     return vamp_dm
 
 
@@ -132,7 +140,7 @@ def connected_dm(mat, dm):
             for comp in connected_comps:
                 # print(comp)
                 vamp_dm[i, j] += connected_frac(mat[i ,:], mat[j, :],
-                                                dm.values, list(comp))
+                                                dm, list(comp))
                 # print("i=%d, j=%d, dm[i,j]=%f"%(i, j, vamp_dm[i, j]))
             vamp_dm[i, j] = np.sqrt(vamp_dm[i, j]/D)
         # print(i)
