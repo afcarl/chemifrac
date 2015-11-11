@@ -75,13 +75,13 @@ def merge(graphs):
         sim_graph = nx.union(graphs[i], sim_graph)
     return sim_graph
 
-def draw_graph(dmG, layout):
+def draw_graph(sim_graph, layout):
     """
     Draws a graph and saves it to a file
 
     Parameters
     ----------
-    dmG : nx.Graph
+    sim_graph : nx.Graph
         Graph to draw
     layout : function
         networkx layout to use
@@ -99,7 +99,7 @@ def draw_graph(dmG, layout):
     nx.draw_networkx_nodes(sim_graph, pos)
     nx.draw_networkx_edges(sim_graph, pos, width=1.0, alpha=0.5)
     nx.draw_networkx_labels(sim_graph, pos, labels)
-    edge_labels = dict([((u,v,), str(np.around(d['weight'], decimals=2)))
+    edge_labels = dict([((u,v,), d['weight'])
                         for u,v,d in sim_graph.edges(data=True)])
     nx.draw_networkx_edge_labels(sim_graph, pos, edge_labels=edge_labels)
     return fig
