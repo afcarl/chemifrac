@@ -1,7 +1,8 @@
 # chemifrac
 
 Make the sure that the following packages are installed.  This can be done through pip
-
+- `networkx`
+- `IPython`
 - `biom`
 - `scikit-bio`
 - `pandas`
