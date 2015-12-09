@@ -62,6 +62,10 @@ class TestRig(unittest.TestCase):
         self.assertLessEqual(a7, a8)
         self.assertLessEqual(a8, a9)
 
+    def test_rig_component(self):
+        import pickle
+        G = pickle.load('test.pickle', open('rb'))
+
     def test_rig_pairwise(self):
         G = nx.Graph()
         G.add_nodes_from(['i', 'j', 'k'])

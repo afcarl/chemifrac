@@ -61,7 +61,7 @@ def rig(G, x, y, res=1e-9):
         nodes = set(comp.nodes())
         subx = x[nodes & set(x.keys())]
         suby = y[nodes & set(y.keys())]
-        
+
         # Perform closure so that abundances within
         # each component add up to one
         if len(subx) > 0:
@@ -109,13 +109,12 @@ def rig_component(G, x, y, maxW):
         return 0
 
     # Convert everything to fractions
-    def fr(k):
-        if k.sum() > 0:
-            return Fraction(k, k.sum())
-        else:
-            return 0
-    x = pd.Series(list(map(fr, x)), index=x.index)
-    y = pd.Series(list(map(fr, y)), index=y.index)
+    if x.sum() != 0:
+        x = pd.Series([Fraction(i, int(x.sum())) for i in np.ravel(x.values)],
+                      index=x.index)
+    if y.sum() != 0:
+        y = pd.Series([Fraction(i, int(y.sum())) for i in np.ravel(y.values)],
+                      index=y.index)
 
     # Both samples contains the exact same metabolites
     # Note that this will change once we start adding weights
@@ -149,10 +148,10 @@ def rig_component(G, x, y, maxW):
     # on the component, arbituarily pick two metabolites
     # and append them to the set.  This to address the issue of
     # measuring distance between unshared components.
-    if len(x) == 0:
+    if len(x) == 0 or x.sum()==0:
         x = pd.Series({y.index[0]: Fraction(1, 1)})
         weight = maxW
-    elif len(y) == 0:
+    elif len(y) == 0 or y.sum()==0:
         y = pd.Series({x.index[0]: Fraction(1, 1)})
         weight = maxW
     else:
@@ -162,14 +161,17 @@ def rig_component(G, x, y, maxW):
     xarr = pd.Series({n:(x[n] if n in x else 0) for n in G.nodes()})
     yarr = pd.Series({n:(y[n] if n in y else 0) for n in G.nodes()})
 
-    print('---')
     d = 0
+    print('---')
     for node in _G.nodes():
         _G.node[node]['demand'] = xarr[node] - yarr[node]
         d += xarr[node] - yarr[node]
-        print(_G.node[node]['demand'])
+        print(xarr[node] - yarr[node])
     print('---')
-    print('Demand', d)
+    print("Demand", d)
+    print("X sum", xarr.sum())
+    print("Y sum", yarr.sum())
+
     W, _ = nx.network_simplex(_G.to_directed())
 
     cost += W + weight
