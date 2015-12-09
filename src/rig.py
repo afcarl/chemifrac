@@ -61,13 +61,17 @@ def rig(G, x, y, res=1e-9):
         nodes = set(comp.nodes())
         subx = x[nodes & set(x.keys())]
         suby = y[nodes & set(y.keys())]
-
+        
         # Perform closure so that abundances within
         # each component add up to one
         if len(subx) > 0:
-            subx = subx / subx.sum()
+            if subx.sum() >0:
+                subx = subx / subx.sum()
+            subx = (subx / res).astype(np.int)
         if len(suby) > 0:
-            suby = suby / suby.sum()
+            if suby.sum() > 0:
+                suby = suby / suby.sum()
+            suby = (suby / res).astype(np.int)
         c = rig_component(comp, subx, suby, maxW)
         cost += c
     return (cost)*res
@@ -104,6 +108,15 @@ def rig_component(G, x, y, maxW):
     if len(x)==0 and len(y)==0:
         return 0
 
+    # Convert everything to fractions
+    def fr(k):
+        if k.sum() > 0:
+            return Fraction(k, k.sum())
+        else:
+            return 0
+    x = pd.Series(list(map(fr, x)), index=x.index)
+    y = pd.Series(list(map(fr, y)), index=y.index)
+
     # Both samples contains the exact same metabolites
     # Note that this will change once we start adding weights
     # due to abundance.
@@ -131,6 +144,7 @@ def rig_component(G, x, y, maxW):
     cost = 0
     edges = G.edges(data='weight')
 
+
     # If there one of the samples doesn't have any metabolites
     # on the component, arbituarily pick two metabolites
     # and append them to the set.  This to address the issue of
@@ -148,9 +162,14 @@ def rig_component(G, x, y, maxW):
     xarr = pd.Series({n:(x[n] if n in x else 0) for n in G.nodes()})
     yarr = pd.Series({n:(y[n] if n in y else 0) for n in G.nodes()})
 
+    print('---')
+    d = 0
     for node in _G.nodes():
         _G.node[node]['demand'] = xarr[node] - yarr[node]
-
+        d += xarr[node] - yarr[node]
+        print(_G.node[node]['demand'])
+    print('---')
+    print('Demand', d)
     W, _ = nx.network_simplex(_G.to_directed())
 
     cost += W + weight
