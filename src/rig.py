@@ -52,7 +52,7 @@ def rig(G, x, y, res=1e-9):
     # This calculates the largest edge set to offset the insertion cost.
     weights = []
     for comp in nx.connected_component_subgraphs(_G):
-        edges = comp.edges(data='weight')
+        edges = list(comp.edges(data='weight'))
         if len(edges) > 0:
             weights.append(sum(list(zip(*edges))[2]))
     maxW = max(weights) + 1
@@ -103,7 +103,6 @@ def rig_component(G, x, y, maxW):
     If they are both None, then the distance will be zero.
     Also, the weights of the edges must be contained in `'weight'`.
     """
-
     # Both samples don't contain any metabolites
     if len(x)==0 and len(y)==0:
         return 0
@@ -137,7 +136,7 @@ def rig_component(G, x, y, maxW):
     # The component being analyzed has only 1 node.
     # So the networkx simplex algorithm cannot be run
     # since there are no edges.
-    if len(G.nodes()) == 1:
+    if len(list(G.nodes())) == 1:
         return maxW
 
     cost = 0
@@ -162,17 +161,11 @@ def rig_component(G, x, y, maxW):
     yarr = pd.Series({n:(y[n] if n in y else 0) for n in G.nodes()})
 
     d = 0
-    print('---')
+    maxxD = max(map(lambda k: k.denominator, x))
+    maxyD = max(map(lambda k: k.denominator, y))
     for node in _G.nodes():
-        _G.node[node]['demand'] = xarr[node] - yarr[node]
-        d += xarr[node] - yarr[node]
-        print(xarr[node] - yarr[node])
-    print('---')
-    print("Demand", d)
-    print("X sum", xarr.sum())
-    print("Y sum", yarr.sum())
+        _G.node[node]['demand'] = int((xarr[node] - yarr[node]) * maxxD * maxyD)
 
     W, _ = nx.network_simplex(_G.to_directed())
-
     cost += W + weight
     return cost
