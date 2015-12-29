@@ -1,9 +1,10 @@
-from src.rig import rig_component,  rig
+from src.rig import rig_component,  rig, rig_pairwise
 import pandas as pd
 import numpy as np
 import networkx as nx
 import unittest
 from fractions import Fraction
+import pickle
 
 class TestRig(unittest.TestCase):
 
@@ -64,46 +65,62 @@ class TestRig(unittest.TestCase):
         self.assertLessEqual(a8, a9)
 
     def test_rig_component1(self):
-        import pickle
         G = pickle.load(open('test.pickle', 'rb'))
         x = pd.read_csv('X', index_col=0, header=None, squeeze=True)
         y = pd.read_csv('Y', index_col=0, header=None, squeeze=True)
         maxW = 491534586766
         d = rig_component(G, x, y, maxW)
+        self(d, 491534586766)
 
     def test_rig_component2(self):
-        import pickle
         G = pickle.load(open('test2.pickle', 'rb'))
         x = pd.read_csv('X2', index_col=0, header=None, squeeze=True)
         y = pd.read_csv('Y2', index_col=0, header=None, squeeze=True)
         maxW = 491534586766
         d = rig_component(G, x, y, maxW)
+        self.assertEquals(2272109295852131273, d)
 
-    def test_simplex(self)
-        G = pickle.load(open('test_directed.pickle', 'rb'))
-        N = list(G)                                # nodes
-        D = [G.node[u].get('demand', 0) for u in N]  # node demands
-        W, _ = nx.network_simplex(G.to_directed())
+    def test_rig_component3(self):
+        G = pickle.load(open('test3.pickle', 'rb'))
+        x = pd.read_csv('X3', index_col=0, header=None, squeeze=True)
+        y = pd.read_csv('Y3', index_col=0, header=None, squeeze=True)
+        maxW = 491534586766
 
-        from itertools import chain, repeat
-        from numpy import inf
-        n = 81
-        U, C, D = pickle.load(open('UCD', 'rb'))
-        faux_inf = 3 * max(chain([sum(u for u in U if u < inf),
-                                  sum(abs(c) for c in C)],
-                                  (abs(d) for d in D))) or 1
-        C.extend(repeat(faux_inf, n))
-        U.extend(repeat(faux_inf, n))
-
-
+        d = rig_component(G, x, y, maxW)
+        self.assertEquals(d, 750686345168434197)
 
     def test_rig_pairwise(self):
+
+        from rig import rig_component, rig, rig_pairwise
+        import pandas as pd
+        import numpy as np
+        import networkx as nx
+        import unittest
+        from fractions import Fraction
+        import pickle
+        from functools import partial
+        from sklearn.metrics.pairwise import pairwise_distances
+
         G = nx.Graph()
         G.add_nodes_from(['i', 'j', 'k'])
         G.add_edge('i','j', {'weight': .9})
-        X = np.array([[1, 1, 1],
-                      [1, 1, 2]])
-        rig_pairwise(G, X)
+        X = pd.DataFrame(np.array([[1, 1, 1],
+                                   [1, 2, 1]]),
+                          columns=['i', 'j', 'k'],
+                          index=['s1', 's2'])
+
+        labs = X.columns.values
+        rig_func = partial(rig, G=G, labs=labs)
+        # Note cannot work with pandas
+        dm = pairwise_distances(X.values, metric=rig_func, n_jobs=1)
+
+        dm = rig_pairwise(G, X)
+
+        # This scenario is broken - 2 get normalized to 1.
+        x = pd.Series([1, 1, 1], index=['i', 'j', 'k'])
+        y = pd.Series([1, 1, 2], index=['i', 'j', 'k'])
+        d = rig(x, y, G)
+
 
 if __name__=='__main__':
     unittest.main()
