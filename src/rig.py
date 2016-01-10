@@ -1,3 +1,4 @@
+
 """
 The RIG metric
 
@@ -14,6 +15,32 @@ from fractions import Fraction
 from sklearn.metrics.pairwise import pairwise_distances
 from functools import partial
 from skbio import DistanceMatrix
+
+def collapse(G, X, f=None):
+    """ Collapses components into a single point.
+
+    Parameters
+    ----------
+    G : nx.Graph
+      A connected graph of weighted edges.
+    X : pd.DataFrame
+      Contingency table of samples where rows are samples
+      and columns are features (i.e. metabolites).
+    f : Collapsing function.  If none is specified
+      then the abundances within a components will be simply
+      summed together.
+
+    Returns
+    -------
+    pd.DataFrame :
+      A new table of collapsed abundances, where the rows correspond to
+      samples and the columns correspond to components.
+    """
+    XT = pd.DataFrame(index=X.index)
+    for i, comp in enumerate(nx.connected_component_subgraphs(G)):
+        nodes = comp.nodes()
+        XT[i] = X[nodes].sum(axis=1)
+    return XT
 
 def rig_pairwise(G, X, n_jobs=1):
     """ Compute the RIG metric on all pairs of samples
@@ -85,18 +112,8 @@ def rig(x, y, G, labs=None, res=1e-9):
         subx = x[nodes & set(x.keys())]
         suby = y[nodes & set(y.keys())]
 
-        # Perform closure so that abundances within
-        # each component add up to one
-        if len(subx) > 0:
-            if subx.sum() >0:
-                subx = subx / subx.sum()
-            subx = (subx / res).astype(np.int)
-        if len(suby) > 0:
-            if suby.sum() > 0:
-                suby = suby / suby.sum()
-            suby = (suby / res).astype(np.int)
-        c = rig_component(comp, subx, suby, maxW)
-        cost += c
+    c = rig_component(comp, subx, suby, maxW)
+    cost += c
     return (cost) * res
 
 def rig_component(G, x, y, maxW):
